@@ -1,16 +1,15 @@
 name: Update Built Cache State
-description: TODO
 inputs:
-  system:
-    description: "Target system"
+  attr_path:
+    description: "Target attrPath"
     required: true
-    default: "x86_64-linux"
-  
-  aws-bucket:
+    default: "packages.x86_64"
+
+  aws_bucket:
     description: "AWS S3 Bucket"
     required: true
     default: "versions-cache"
-  
+
   aws_access_key_id:
     required: true
     description: TODO
@@ -33,7 +32,7 @@ runs:
       run: |
         # FIXME: make generic over github instances (GH Enterprise)
         # TODO: use `?ref=..`
-        FLAKE_REF="github:${{github.repository}}/${{github.ref_name}}#packages.${{inputs.system}}"
+        FLAKE_REF="github:${{github.repository}}/${{github.ref_name}}#${{inputs.attr_path}}"
         FLAKE_REF="$(echo ${FLAKE_REF} | tr / _)"
         DB_PATH="$FLAKE_REF.db"
         EVAL_RESULT="$FLAKE_REF.json"
@@ -54,19 +53,19 @@ runs:
         AWS_ACCESS_KEY_ID: ${{ inputs.aws_access_key_id }}
         AWS_SECRET_ACCESS_KEY: ${{ inputs.aws_secret_access_key }}
         AWS_REGION: us-east-1
-      run: nix shell nixpkgs\#awscli2 -c aws s3 cp s3://${{inputs.aws-bucket}}/${{steps.config.outputs.db-path}} ./${{steps.config.outputs.db-path}} || true
+      run: nix shell nixpkgs\#awscli2 -c aws s3 cp s3://${{inputs.aws_bucket}}/${{steps.config.outputs.db-path}} ./${{steps.config.outputs.db-path}} || true
 
     - name: db permissions
       shell: bash
       run: |
         [[ -e ${{steps.config.outputs.db-path}} ]] || exit 0
 
-        sudo chown runner ${{steps.config.outputs.db-path}} 
+        sudo chown runner ${{steps.config.outputs.db-path}}
         sudo chmod 664 ${{steps.config.outputs.db-path}}
 
     - name: Eval linux
       shell: bash
-      run: nix run .#eval ./#packages.${{inputs.system}} | tee ${{steps.config.outputs.eval-result}}
+      run: nix run .#eval .\#${{inputs.attr_path}} | tee ${{steps.config.outputs.eval-result}}
 
     - name: Build cache linux
       shell: bash
@@ -82,7 +81,7 @@ runs:
         AWS_ACCESS_KEY_ID: ${{ inputs.aws_access_key_id }}
         AWS_SECRET_ACCESS_KEY: ${{ inputs.aws_secret_access_key }}
         AWS_REGION: us-east-1
-      run: nix shell nixpkgs\#awscli2 -c aws s3 cp ./${{steps.config.outputs.db-path}} s3://${{inputs.aws-bucket}}/${{steps.config.outputs.db-path}}
+      run: nix shell nixpkgs\#awscli2 -c aws s3 cp ./${{steps.config.outputs.db-path}} s3://${{inputs.aws_bucket}}/${{steps.config.outputs.db-path}}
 
     - name: copy update eval cache overwrite back to s3
       shell: bash
@@ -90,4 +89,4 @@ runs:
         AWS_ACCESS_KEY_ID: ${{ inputs.aws_access_key_id }}
         AWS_SECRET_ACCESS_KEY: ${{ inputs.aws_secret_access_key }}
         AWS_REGION: us-east-1
-      run: nix shell nixpkgs\#awscli2 -c aws s3 cp ./${{steps.config.outputs.eval-result}} s3://${{inputs.aws-bucket}}/${{steps.config.outputs.eval-result}}
+      run: nix shell nixpkgs\#awscli2 -c aws s3 cp ./${{steps.config.outputs.eval-result}} s3://${{inputs.aws_bucket}}/${{steps.config.outputs.eval-result}}
