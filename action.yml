@@ -16,6 +16,11 @@ inputs:
   aws_secret_access_key:
     required: true
     description: TODO
+  flake_ref:
+    description: "Target flakeref"
+    required: true
+    type: string
+    default: .
   git_token:
     required: false
     description: TODO
