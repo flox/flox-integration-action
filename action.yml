@@ -58,7 +58,7 @@ runs:
 
     - shell: bash
       env:
-        FLOX_FLAKE_REF: ${{inputs.flake-ref}}
+        FLOX_FLAKE_REF: ${{inputs.flake_ref}}
         FLOX_ATTR_PATH: ${{inputs.attr_path}}
         FLOX_CACHE_DB_PATH: ${{steps.config.outputs.db-path}}
         FLOX_EVAL_RESULT: ${{steps.config.outputs.eval-result}}
