@@ -31,7 +31,7 @@
           # Check build chache for build result
           CHECK_CACHE_GLOBAL_ARGS=("--debug" "-u" "-d" "$FLOX_CACHE_DB_PATH")
           [[ -z "$FLOX_ALT_SUBSTITUTER" ]] || CHECK_CACHE_GLOBAL_ARGS+=("--substituter" "$FLOX_ALT_SUBSTITUTER")
-          cat "$FLOX_EVAL_RESULT" | nix run .#checkCache -- "''${CHECK_CACHE_GLOBAL_ARGS[@]}" activate 
+          nix run .#checkCache -- "''${CHECK_CACHE_GLOBAL_ARGS[@]}" activate < "$FLOX_EVAL_RESULT"
 
           # Push updated database to AWS
           aws s3 cp "./$FLOX_CACHE_DB_PATH" "s3://$FLOX_AWS_BUCKET/$FLOX_CACHE_DB_PATH"
