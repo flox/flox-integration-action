@@ -44,7 +44,8 @@ runs:
         DB_PATH="$FLAKE_REF.db"
         EVAL_RESULT="$FLAKE_REF.json"
 
-        echo "::set-output name=flake-ref::${FLAKE_REF}"
+
+        echo "::set-output name=flake-ref-file-name::${FLAKE_REF}"
         echo "::set-output name=db-path::${DB_PATH}"
         echo "::set-output name=eval-result::${EVAL_RESULT}"
 
@@ -57,7 +58,7 @@ runs:
 
     - shell: bash
       env:
-        FLOX_FLAKE_REF: ${{steps.config.outputs.flake-ref}}
+        FLOX_FLAKE_REF: ${{inputs.flake-ref}}
         FLOX_ATTR_PATH: ${{inputs.attr_path}}
         FLOX_CACHE_DB_PATH: ${{steps.config.outputs.db-path}}
         FLOX_EVAL_RESULT: ${{steps.config.outputs.eval-result}}

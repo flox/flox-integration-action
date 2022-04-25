@@ -26,7 +26,7 @@
           fi
 
           # Evaluate using eval app injected by capacitor
-          nix run .#eval "$FLOX_FLAKE_REF" | tee "$FLOX_EVAL_RESULT"
+          nix run .#eval "$FLOX_FLAKE_REF"#"$FLOX_ATTR_PATH" | tee "$FLOX_EVAL_RESULT"
 
           # Check build chache for build result
           SUBSTITUTER_FLAG=""
