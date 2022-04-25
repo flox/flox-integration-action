@@ -67,4 +67,4 @@ runs:
         AWS_SECRET_ACCESS_KEY: ${{ inputs.aws_secret_access_key }}
         AWS_REGION: us-east-1
       run: |
-        nix run .#ci
+        nix run github:flox/flox-integration-action#ci
