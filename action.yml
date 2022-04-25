@@ -55,8 +55,7 @@ runs:
           extra-substituters = s3://flox-store-public
           extra-trusted-public-keys = flox-store-public-0:8c/B+kjIaQ+BloCmNkRUKwaVPFWkriSAd0JJvuDu4F0=
 
-    - id: config
-      shell: bash
+    - shell: bash
       env:
         FLOX_FLAKE_REF: ${{steps.config.outputs.flake-ref}}
         FLOX_ATTR_PATH: ${{inputs.attr_path}}
