@@ -1,31 +1,34 @@
-name: Update Built Cache State
+name: Flox Built Cache Integration
+description: Updates Built Cache State by evaluating the specified attribute and pushing the evaluation results to an AWS bucket
 inputs:
+
   attr_path:
-    description: "Target attrPath"
+    description: "Attribute to be evaluated"
     required: true
-    default: "packages.x86_64"
-
-  aws_bucket:
-    description: "AWS S3 Bucket"
-    required: true
-    default: "versions-cache"
-
-  aws_access_key_id:
-    required: true
-    description: TODO
-  aws_secret_access_key:
-    required: true
-    description: TODO
+    default: "packages.x86_64-linux.default"
   flake_ref:
     description: "Target flakeref"
     required: true
     default: .
+  
+  aws_bucket:
+    description: "AWS S3 Bucket that holds evaluation results"
+    required: true
+    default: "versions-cache"
+  aws_access_key_id:
+    required: true
+    description: Your AWS access key
+  aws_secret_access_key:
+    required: true
+    description: Your AWS secret access key
+ 
   git_token:
     required: false
-    description: TODO
+    description: Git token to be used to authenticate access to private Git repositories on GitHub
+  
   substituter:
     required: false
-    description: TODO
+    description: Your custom build cache used by the capacitpr to check build results
 
 
 runs:
@@ -52,46 +55,17 @@ runs:
           extra-substituters = s3://flox-store-public
           extra-trusted-public-keys = flox-store-public-0:8c/B+kjIaQ+BloCmNkRUKwaVPFWkriSAd0JJvuDu4F0=
 
-    - name: copy cachedb from s3
+    - id: config
       shell: bash
       env:
+        FLOX_FLAKE_REF: ${{steps.config.outputs.flake-ref}}
+        FLOX_ATTR_PATH: ${{inputs.attr_path}}
+        FLOX_CACHE_DB_PATH: ${{steps.config.outputs.db-path}}
+        FLOX_EVAL_RESULT: ${{steps.config.outputs.eval-result}}
+        FLOX_ALT_SUBSTITUTER: ${{inputs.substituter}} 
+        FLOX_AWS_BUCKET: ${{inputs.aws_bucket}}
         AWS_ACCESS_KEY_ID: ${{ inputs.aws_access_key_id }}
         AWS_SECRET_ACCESS_KEY: ${{ inputs.aws_secret_access_key }}
         AWS_REGION: us-east-1
-      run: nix shell nixpkgs\#awscli2 -c aws s3 cp s3://${{inputs.aws_bucket}}/${{steps.config.outputs.db-path}} ./${{steps.config.outputs.db-path}} || true
-
-    - name: db permissions
-      shell: bash
       run: |
-        [[ -e ${{steps.config.outputs.db-path}} ]] || exit 0
-
-        sudo chown runner ${{steps.config.outputs.db-path}}
-        sudo chmod 664 ${{steps.config.outputs.db-path}}
-
-    - name: Eval linux
-      shell: bash
-      run: nix run .#eval "${{inputs.flake_ref}}"#"${{inputs.attr_path}}" | tee ${{steps.config.outputs.eval-result}}
-
-    - name: Build cache linux
-      shell: bash
-      run: |
-        SUBSTITUTER_FLAG=""
-        [[ -z "${{inputs.substituter}}" ]] || SUBSTITUTER_FLAG="--substituter ${{inputs.substituter}}"
-        nix run .#checkCache -- --debug ${SUBSTITUTER_FLAG} -u -d ${{steps.config.outputs.db-path}} activate < ${{steps.config.outputs.eval-result}}
-
-
-    - name: copy update cachedb overwrite back to s3
-      shell: bash
-      env:
-        AWS_ACCESS_KEY_ID: ${{ inputs.aws_access_key_id }}
-        AWS_SECRET_ACCESS_KEY: ${{ inputs.aws_secret_access_key }}
-        AWS_REGION: us-east-1
-      run: nix shell nixpkgs\#awscli2 -c aws s3 cp ./${{steps.config.outputs.db-path}} s3://${{inputs.aws_bucket}}/${{steps.config.outputs.db-path}}
-
-    - name: copy update eval cache overwrite back to s3
-      shell: bash
-      env:
-        AWS_ACCESS_KEY_ID: ${{ inputs.aws_access_key_id }}
-        AWS_SECRET_ACCESS_KEY: ${{ inputs.aws_secret_access_key }}
-        AWS_REGION: us-east-1
-      run: nix shell nixpkgs\#awscli2 -c aws s3 cp ./${{steps.config.outputs.eval-result}} s3://${{inputs.aws_bucket}}/${{steps.config.outputs.eval-result}}
+        nix run .#ci
