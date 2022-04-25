@@ -16,7 +16,7 @@
       rec {
 
         apps.ci = toApp "update-built-cache" { runtimeInputs = [ pkgs.awscli2 ]; } ''
-        
+
           # Try to pull current cache database from AWS
           aws s3 cp "s3://$FLOX_AWS_BUCKET/$FLOX_CACHE_DB_PATH" "./$FLOX_CACHE_DB_PATH" || true
 
@@ -26,7 +26,7 @@
           fi
 
           # Evaluate using eval app injected by capacitor
-          nix run .#eval "$FLOX_FLAKE_REF#$FLOX_ATTR_PATH" | tee "$FLOX_EVAL_RESULT"
+          nix run .#eval "$FLOX_FLAKE_REF" | tee "$FLOX_EVAL_RESULT"
 
           # Check build chache for build result
           SUBSTITUTER_FLAG=""
