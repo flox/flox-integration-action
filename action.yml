@@ -19,7 +19,6 @@ inputs:
   flake_ref:
     description: "Target flakeref"
     required: true
-    type: string
     default: .
   git_token:
     required: false
